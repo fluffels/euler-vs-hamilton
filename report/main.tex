@@ -1,4 +1,4 @@
-\documentclass[a4paper]{article}
+\documentclass{acm_proc_article-sp}
 
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
@@ -22,6 +22,14 @@
 
 \begin{document}
 \maketitle
+
+\begin{abstract}
+Abstract goes here.
+\end{abstract}
+
+\category{K.8.1}{Application Packages}{Graphics}
+
+\terms{Algorithms, Experimentation, Measurement, Performance}
 
 \section{Introduction}
 
@@ -74,7 +82,7 @@ We implement these camera classes as C++ templates and parameterize them as both
 Each implementation is also accompanied by a version that ortho-normalizes the rotation sub-matrix before it is sent to the shaders to be used as a view matrix.
 
 \begin{figure}
-\includegraphics[width=12cm]{user_interface.png}
+\includegraphics[width=8.5cm]{user_interface.png}
 \caption{The user interface for the test platform.}
 \end{figure}
 
@@ -97,16 +105,42 @@ Thirty tests of approximately one minute each were run, recording the victorious
 
 \section{Results} 
 
+Below, we have reproduced some graphs detailing the numerical stability of the various algorithms over time for several of our experimental test runs.
+
+\begin{figure}
+\includegraphics[width=8.5cm]{plots/stability_plot_21.png}
+\caption{Test run 21 indicates a case where quaternions performed particularly poorly in terms of numerical stability.}
+\end{figure}
+\begin{figure}
+\includegraphics[width=8.5cm]{plots/stability_plot_21.png}
+\caption{Test run 24 is another good illustration of the orthonormalized rotation matrix's numerical stability.}
+\end{figure}
+\begin{figure}
+\includegraphics[width=8.5cm]{plots/stability_plot_13.png}
+\caption{Test run 13 illustrates a rare case where the orthonormalized rotation matrix performance was sub par.}
+\end{figure}
+\begin{figure}
+\includegraphics[width=8.5cm]{plots/stability_plot_28.png}
+\caption{Test run 28 illustrates the poor stability of rotation matrices without orthonormalisation.}
+\end{figure}
+
+We typically observed that the orthonormalized rotation matrices and quaternion implementations stayed around the $10^-12$ mark, however the rotation matrix implementation tends to explode past the $10^-10$ marks relatively quickly.
+
 An interesting result is that the quaternion algorithms are actually faster than the rotation matrix versions.
 This is in line with the passing comment made by Taylor \parencite[435]{taylor79}.
+This phenomenon is described in the subsection on performance, below.
 
-There is good mathematical basis for this as well.
+\subsection{Relative Performance}
+
+One might expect that quaternions are somewhat slower than rotation matrices, since they need to be converted to a new format, and because the math describing them is somewhat complex.
+This turns out not to be the case.
+Briefly, quaternions are a much more compact representation of rotations, requiring only four components and not nine \parencite[435]{taylor79}.
+
 Consider a case where a view matrix representation has to be updated with a rotation around two axes, for example the X and Y axes.
 (We ommit the Z axis from this consideration, because it is implemented in exactly the same way as the X and Y axes, and therefore doesn't affect a comparison between methods if it is left out.)
 The view matrix itself is a four dimensional matrix in homogenous coordinate space, and so is the rotation matrix for the X and Y axes.
 The current view matrix is given by:
 
-\vspace{0.5em}
 $V = \left[ \begin{array}{cccc}
     V_{11} & V_{12} & V_{13} & V_{14} \\
     V_{21} & V_{22} & V_{23} & V_{24} \\
@@ -123,6 +157,7 @@ $X = \left[ \begin{array}{cccc}
     X_{31} & X_{32} & X_{33} & X_{34} \\
     X_{41} & X_{42} & X_{43} & X_{44} \\
 \end{array} \right]$, and
+
 $Y = \left[ \begin{array}{cccc}
     Y_{11} & Y_{12} & Y_{13} & Y_{14} \\
     Y_{21} & Y_{22} & Y_{23} & Y_{24} \\
@@ -146,6 +181,38 @@ Consider two quaternions: $q_1$ and $q_2$.
 Now, each quaternion consists of one real part (which we can treat as a scalar) and an imaginary part (which we treat as a three-component vector).
 Label these scalars and vectors as $s_1$, $s_2$, $v_1$, $v_2$, respectively.
 If we rewrite $q_1$ as $\left[ \begin{array}{cc} s_1 & v_1 \end{array} \right]$ and $q_2$ as $\left[ \begin{array}{cc} s_2 & v_2 \end{array} \right]$ then quaternion multiplication is simply defined as $q_1 q_2 = \left[ \begin{array}{cc} s_1 s_2 - v_1 \cdot v_2 & s_1 v_2 + s_2 v_1 + v_1 \times v_2 \end{array} \right]$ \parencite{schoemake85}.
+This calculation involves 3 scalar multiplications, 1 addition, 1 subtraction, a dot product and a cross product.
+The dot product consists of 3 multiplies and 2 adds.
+The cross product comprises 6 multiplies and 3 subtractions.
+This brings the subtotal for a single quaternion multiplication to 12 multiplies, 3 additions, and 3 subtractions.
+Since two multiplications are necessary, that brings the subtotal for quaternion multiplications to 24 multiplies, 6 additions and 6 subtractions.
+
+The final step in the quaternion algorithm is to translate the quaternion into a rotation matrix.
+If a quaternion can be written as $q = \left[ \begin{array}{cccc} w & x & y & z \end{array} \right]$, where $w$ is the scalar part from before, and $\left[ \begin{array}{ccc} x & y & z \end{array} \right]$ are the components of the imaginary part discussed earlier, then this translation is given by the matrix $M$ where
+
+$M = \left[ \begin{array}{ccc}
+    1 - 2y^2 - 2z^2 & 2xy + 2wz & 2xz - wy \\
+    2xy - 2wz & 1 - 2x^2 - 2z^2 & 2yz + 2wz \\
+    2xz + 2wy & 2yz - 2wx & 1 - 2x^2 - 2y^2 \\
+    \end{array}\right]$
+
+This operation involves 36 multiplies, 3 additions and 9 subtractions.
+However, this operation only needs to be performed once, since it is only the resulting quaternion that needs to be converted to a matrix for use as the view matrix by the shader programs.
+The results of this instruction counting exercise are summarized in Figure 2.
+
+Nearly every category of instruction is much larger for the rotation matrix parameterization than for the quaternion version.
+Therefore, it should not be surprising that the quaternion implementation is so much faster.
+
+\begin{figure}
+\begin{tabular}{l|l|l|l|l}
+    Algorithm       & $\sin$/$\cos$  & $\times$      & $+$       & $-$  \\
+    \hline
+    Rotation Matrix & 8              & 128           & 96        & 0             \\
+    Quaternion      & 4              & 70            & 9         & 15            \\
+
+\end{tabular}
+\caption{Instruction counting for rotation matrix and quaternion algorithms.}
+\end{figure}
 
 \section{Conclusion}
 
