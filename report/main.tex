@@ -5,15 +5,12 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{csvsimple}
+\usepackage{framed}
 \usepackage{graphicx}
 \usepackage[colorlinks=true, pdfborder={0 0 0}, citecolor=blue, filecolor=blue, linkcolor=blue, urlcolor=blue]{hyperref}
 \usepackage[colorinlistoftodos]{todonotes}
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
-
-\usepackage{float}
-\floatstyle{boxed}
-\restylefloat{figure}
 
 \title{Euler vs. Hamilton --- Investigating Claims of Quaternion Superiority for Rotation Parameterization of Interactive 3D Camera Control Problems}
 \author{}
@@ -114,8 +111,10 @@ We implement these camera classes as C++ templates and parameterize them as both
 Each implementation is also accompanied by a version that ortho-normalizes the rotation sub-matrix before it is sent to the shaders to be used as a view matrix.
 
 \begin{figure}
-\includegraphics[width=8.5cm]{user_interface.png}
+\begin{framed}
+\includegraphics[width=8cm]{user_interface.png}
 \caption{The user interface for the test platform.}
+\end{framed}
 \end{figure}
 
 The user is now presented with a simple scene that contains some basic geometry to allow the user to orient him / herself.
@@ -142,22 +141,26 @@ We have reproduced some graphs detailing the numerical stability of the various 
 Performance graphs can be found in Figure \ref{fig:performance}.
 
 \begin{figure}[htpb]
-\includegraphics[width=8.5cm]{plots/stability_plot_21.png}
-\includegraphics[width=8.5cm]{plots/stability_plot_13.png}
-\includegraphics[width=8.5cm]{plots/stability_plot_28.png}
+\begin{framed}
+\includegraphics[width=8cm]{plots/stability_plot_21.png}
+\includegraphics[width=8cm]{plots/stability_plot_13.png}
+\includegraphics[width=8cm]{plots/stability_plot_28.png}
 \caption{Test run 21 (top) indicates a case where quaternions performed particularly poorly in terms of numerical stability.
 Test run 13 (middle) illustrates a rare case where the orthonormalized rotation matrix performance was sub par.
 Test run 28 (bottom) illustrates the poor stability of rotation matrices without orthonormalisation.}
+\end{framed}
 \label{fig:stability}
 \end{figure}
 
 \begin{figure}[htpb]
-\includegraphics[width=8.5cm]{plots/timing_plot_1.png}
-\includegraphics[width=8.5cm]{plots/timing_plot_21.png}
-\includegraphics[width=8.5cm]{plots/timing_plot_22.png}
+\begin{framed}
+\includegraphics[width=8cm]{plots/timing_plot_1.png}
+\includegraphics[width=8cm]{plots/timing_plot_21.png}
+\includegraphics[width=8cm]{plots/timing_plot_22.png}
 \caption{Test run 1 (top) is a typical performance profile.
 Test run 21 (middle) is curios, the orthonormalization does not seem to cost anything for the rotation matrix.
 Test run 22 (bottom) is more anomolous, note that the orthonormalized rotation matrix is less expensive than the non-normalized version.}
+\end{framed}
 \label{fig:performance}
 \end{figure}
 
@@ -173,9 +176,13 @@ This phenomenon is described in subsection \ref{sec:performance}.
 
 The results of our numeric stability experiment is represented in the table below.
 
+\begin{figure}
 \csvautotabular{wins.csv}
+\caption{Table of wins for an algorithm per test run.}
+\label{fig:wins}
+\end{figure}
 
-In the table above, ``RotMat'' represents the na\"{i}ve rotation matrix implementation. ``OrthoRotMat'' is the rotation matrix implementation that uses ortho-normalisation, ``Quat'' is the quaternion implementation, and ``OrthoQuat'' is the quaternion implementation that uses orth-normalisation.
+In Figure \ref{fig:wins}, ``RotMat'' represents the na\"{i}ve rotation matrix implementation. ``OrthoRotMat'' is the rotation matrix implementation that uses ortho-normalisation, ``Quat'' is the quaternion implementation, and ``OrthoQuat'' is the quaternion implementation that uses orth-normalisation.
 
 It is an exception when the ortho-normalised implementation is not superior for most of the run of an experiment.
 In fact, ``OrthoRotMat'' only loses out in two out of thirty cases.
@@ -190,8 +197,15 @@ The na\"{i}ve rotation matrix quickly exploded to the $10^{10}$ level and past i
 \label{sec:performance}
 
 One might expect that quaternions are somewhat slower than rotation matrices, since they need to be converted to a new format, and because the math describing them is somewhat complex.
-This turns out not to be the case.
+This turns out not to be the case, as the table in Figure \ref{fig:performance-table} will show (printed in Appendix A, due to formatting issues).
+
+Two things are interesting from this table.
+First, the quaternion implementations are faster than the rotation matrix implementations.
+This is not suprising.
 Briefly, quaternions are a much more compact representation of rotations, requiring only four components and not nine \cite{taylor79}.
+
+Second, the ortho-normalised version of the algorithms are often cheaper than the non-normalised version.
+The reason for this is left as an excercise for future research.
 
 Consider a case where a view matrix representation has to be updated with a rotation around two axes, for example the X and Y axes.
 (We ommit the Z axis from this consideration, because it is implemented in exactly the same way as the X and Y axes, and therefore doesn't affect a comparison between methods if it is left out.)
@@ -261,6 +275,7 @@ Nearly every category of instruction is much larger for the rotation matrix para
 Therefore, it should not be surprising that the quaternion implementation is so much faster.
 
 \begin{figure}
+\begin{framed}
 \begin{tabular}{l|l|l|l|l}
     Algorithm       & $\sin$/$\cos$  & $\times$      & $+$       & $-$  \\
     \hline
@@ -269,6 +284,7 @@ Therefore, it should not be surprising that the quaternion implementation is so 
 
 \end{tabular}
 \caption{Instruction counting for rotation matrix and quaternion algorithms.}
+\end{framed}
 \label{fig:counting}
 \end{figure}
 
@@ -293,5 +309,16 @@ For now, it has been removed to protect the anonymity of the researchers.
 
 \bibliographystyle{ACM-Reference-Format-Journals}
 \bibliography{main}
+
+\onecolumn
+\newpage
+
+\section*{Appendix A}
+
+\begin{figure}[h]
+\csvautotabular{test.csv}
+\caption{Time taken to calculate the camera's view matrix for each algorithm during each test run.}
+\label{fig:performance-table}
+\end{figure}
 
 \end{document}
