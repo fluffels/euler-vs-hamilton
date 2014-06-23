@@ -5,6 +5,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage[style=numeric, backend=bibtex]{biblatex}
+\usepackage{csvsimple}
 \usepackage{graphicx}
 \usepackage[colorinlistoftodos]{todonotes}
 \usepackage{pgfplots}
@@ -107,10 +108,10 @@ In that paper, it was discovered that quaternion representations offer the least
 \section{Experimental Setup}
 
 Our experiment consists of an implementation of both competing methods of interactive camera control.
-The first implementation stores the current camera's position and orientation as a view matrix.
-This view matrix is then multiplied by a rotation or translation matrix that indicates the amount to rotate or move by whenever the camera's position is altered.
-The second implementation stores the current camera's position and orientation as a quaternion.
-The quaternion is then multiplied by another quaternion that indicates the adjustment in the camera's position or orientation whenever a movement key is pressed or the mouse is moved.
+The first implementation stores the current camera's orientation as a rotation matrix.
+This rotation matrix is then multiplied by rotation matrices that indicates the amount to rotate or move by whenever the camera's position is altered.
+The second implementation stores the current camera's orientation as a quaternion.
+The quaternion is then multiplied by another quaternion that indicates the adjustment in the camera's orientation whenever the mouse is moved.
 We implement these camera classes as C++ templates and parameterize them as both doubles and floats.
 Each implementation is also accompanied by a version that ortho-normalizes the rotation sub-matrix before it is sent to the shaders to be used as a view matrix.
 
@@ -160,7 +161,20 @@ This phenomenon is described in subsection \ref{sec:performance}.
 \subsection{Numeric Stability}
 \label{sec:stability}
 
+The results of our numeric stability experiment is represented in the table below.
 
+\csvautotabular{wins.csv}
+
+In the table above, ``RotMat'' represents the na\"{i}ve rotation matrix implementation. ``OrthoRotMat'' is the rotation matrix implementation that uses ortho-normalisation, ``Quat'' is the quaternion implementation, and ``OrthoQuat'' is the quaternion implementation that uses orth-normalisation.
+
+It is an exception when the ortho-normalised implementation is not superior for most of the run of an experiment.
+In fact, ``OrthoRotMat'' only loses out in two out of thirty cases.
+
+The odds of obtaining this result at random (assuming the null hypothesis that all algorithms are equally stable) is $\dfrac{1}{4}^{28} \approx 1.39e-17$.
+We therefore regard this result as significant.
+
+We typically observed that the orthnormalized rotation matrix and quaternion implementations remained at an error level around the $10^{-12}$ level, 
+The na\"{i}ve rotation matrix quickly exploded to the $10^{10}$ level and past it.
 
 \subsection{Relative Performance}
 \label{sec:performance}
@@ -203,7 +217,7 @@ This involves two $4 \times 4$ matrix-matrix multiplications, which can be decom
 Since each matrix is $4 \times 4$, this is approximately 32 dot products in total.
 Each dot product contains 3 summation operations and 4 multiplies, which leads to a total of 96 summations and 128 multiplies for the matrix-matrix multiplication alone.
 In addition, a further four transcendental function invocations each are required to calculate X and Y.
-Finally, the Gram-Schmidt ortho-normalization process is applied, but since we applied this to the quaternio implementation here, it is not necessary to count its operations.
+Finally, the Gram-Schmidt ortho-normalization process is applied, but since we applied this to the quaternion implementation here, it is not necessary to count its operations.
 
 For the quaternion implementation, matters are different.
 First, the quaternion rotations about the X and Y axes must be converted from an angle-axis.
@@ -231,7 +245,7 @@ $M = \left[ \begin{array}{ccc}
 
 This operation involves 36 multiplies, 3 additions and 9 subtractions.
 However, this operation only needs to be performed once, since it is only the resulting quaternion that needs to be converted to a matrix for use as the view matrix by the shader programs.
-The results of this instruction counting exercise are summarized in Figure 2.
+The results of this instruction counting exercise are summarized in Figure \ref{fig:counting}.
 
 Nearly every category of instruction is much larger for the rotation matrix parameterization than for the quaternion version.
 Therefore, it should not be surprising that the quaternion implementation is so much faster.
@@ -245,6 +259,7 @@ Therefore, it should not be surprising that the quaternion implementation is so 
 
 \end{tabular}
 \caption{Instruction counting for rotation matrix and quaternion algorithms.}
+\label{fig:counting}
 \end{figure}
 
 \section{Conclusion}
@@ -252,6 +267,14 @@ Therefore, it should not be surprising that the quaternion implementation is so 
 We have empirically verified various claims about unit quaternions and their use as rotation parameterizations.
 They are somewhat faster than rotation matrices.
 The difference is an order of magnitude, but the absolute values are already so low that it is likely that this difference will only matter in heavily resource-constrained environments.
+
+In addition, the numerical stability that quaternion rotation parameterizations enjoy in the integration of rotational velocities does not extend to interactive camera control environments.
+In these environments, the orthonormalized rotation matrix is superior in the realm of numerical stability.
+The difference is negligable, however, and the quaternion implementation is much faster.
+We suspect that this difference will only matter in situations where numerical stability is \emph{very} important, such as extremely sensitive robot control problems or very long running processes that can accumulate large amounts of errors.
+
+Finally, we have discovered that the Gram-Schmidt ortho-normalization that was used in this experiment has almost no cost associated with it, and indeend, sometimes saves computational time.
+The reason for this is likely related to compiler or central processing unit optimizations, but we leave further speculation on that front to future work.
 
 \printbibliography
 
