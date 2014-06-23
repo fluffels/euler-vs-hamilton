@@ -4,9 +4,9 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage[style=numeric, backend=bibtex]{biblatex}
 \usepackage{csvsimple}
 \usepackage{graphicx}
+\usepackage[colorlinks=true, pdfborder={0 0 0}, citecolor=blue, filecolor=blue, linkcolor=blue, urlcolor=blue]{hyperref}
 \usepackage[colorinlistoftodos]{todonotes}
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
@@ -14,8 +14,6 @@
 \usepackage{float}
 \floatstyle{boxed}
 \restylefloat{figure}
-
-\addbibresource{main.bib}
 
 \title{Euler vs. Hamilton --- Investigating Claims of Quaternion Superiority for Rotation Parameterization of Interactive 3D Camera Control Problems}
 \author{}
@@ -28,7 +26,7 @@
 Precious little research exists on the optimal way to represent interactive cameras with three degrees of freedom.
 These are cameras that can fly through a scene while rolling, pitching and yawing.
 In addition, they are controlled by a user through use of the mouse and keyboard.
-We investigate whether quaternions have the same numerical stability for this application area as for the integration case mentioned in \parencite{zupan11}.
+We investigate whether quaternions have the same numerical stability for this application area as for the integration case mentioned in \cite{zupan11}.
 Along the way, we note several interesting phenomena we perceived during the course of our research.
 
 In order to test this numerical stability, we compare the stability of our quaternion camera implementation against the implementation that has the best numerical stability that we know of --- the ortho-normalized rotation matrix representation.
@@ -71,38 +69,38 @@ We recapitulate some of them here, for the uninitaited reader.
 
 \subsection{Euler-Angle}
 
-The Euler-angle system is a parameterization based on three separate angles: roll, pitch and yaw --- these are the rotation amounts around three separate axes: the X, Y, and Z axes, respectively \parencite[11]{diebel06}.
+The Euler-angle system is a parameterization based on three separate angles: roll, pitch and yaw --- these are the rotation amounts around three separate axes: the X, Y, and Z axes, respectively \cite{diebel06}.
 The problem with this system is one of gimball lock.
 Briefly stated, a rotation of one of the axes can bring it into the plane of one of the other axes.
-At this stage, a rotation about any one of these two axes is equivalent to a rotation about the other, we have therefore lost a degree of freedom \parencite[4]{pletinckx89}.
+At this stage, a rotation about any one of these two axes is equivalent to a rotation about the other, we have therefore lost a degree of freedom \cite{pletinckx89}.
 
 \subsection{Axis-Angle}
 
 The axis-angle representation collapses all rotations to a rotation with a certain magnitude about a single axis.
-The magnitude of this rotation becomes the length of a vector with a direction that corresponds to this axis \parencite[18]{diebel06}.
+The magnitude of this rotation becomes the length of a vector with a direction that corresponds to this axis \cite{diebel06}.
 
 \subsection{Rotation Matrices}
 
 Rotation matrices represent rotations as the components of a $3 \times 3$ matrix of real vlaues.
 Rotation matrices are convenient because they work well with the well-established method of using matrices to represent affine transformations in computer graphics applications.
-Rotation matrices have to be kept ortho-normal, if they deviate from this property then they will alter the length of vectors, leading to distortions in the shape of the objects being rotated \parencite[4--5]{diebel06}.
+Rotation matrices have to be kept ortho-normal, if they deviate from this property then they will alter the length of vectors, leading to distortions in the shape of the objects being rotated \cite{diebel06}.
 
 \subsection{Quaternions}
 
 Quaternion representations use a three component imaginary number vector along with a scalar component to represent rotations in three dimensional space.
-They are convenient because composing rotations represented as quaternions is a simple matter of multiplying them together \parencite[246]{schoemake85}.
+They are convenient because composing rotations represented as quaternions is a simple matter of multiplying them together \cite{schoemake85}.
 Other properties make quaternions more desirable than the other representations discussed so far.
-For example, they are purportedly faster to compute than rotation matrices \parencite[435]{taylor79}, they do not exhibit gimball lock \parencite[247]{schoemake85}.
+For example, they are purportedly faster to compute than rotation matrices \cite{taylor79}, they do not exhibit gimball lock \cite{schoemake85}.
 
 \section{Related Work}
 
-The earliest mention of quaternions for use in representing rotations seem to be \parencite{taylor79}, in which a novel method of robotic control is proposed.
-Somewhat later \parencite{schoemake85} proposed a rotation animation method that uses quaternions to interpolate between key frames.
-That work claims that quaternions are best for interpolation \parencite[247]{schoemake85}.
-Pletinckx in 1989 describes the quaternions and makes the important point that they are a less redundant representation of rotation than rotation matrices, since they only have four components and not nine \parencite[3]{pletinckx89}.
-The rest of that work motivates the use of quaternions in general graphics applications for such reason as the fact that they are gimball lock free \parencite[4]{pletinckx89} and can be used to solve animation, modelling and rendering problems \parencite[12]{pletinckx89}.
-Mukundan's work is a similar paper on the desirability of quaternions, pointing to applications in computer vision \parencite{mukundan02}.
-Zupan presents a recent paper that describes a method for integrating rotation values from angular velocity through the use of quaternions \parencite{zupan11}.
+The earliest mention of quaternions for use in representing rotations seem to be \cite{taylor79}, in which a novel method of robotic control is proposed.
+Somewhat later \cite{schoemake85} proposed a rotation animation method that uses quaternions to interpolate between key frames.
+That work claims that quaternions are best for interpolation \cite{schoemake85}.
+Pletinckx in 1989 describes the quaternions and makes the important point that they are a less redundant representation of rotation than rotation matrices, since they only have four components and not nine \cite{pletinckx89}.
+The rest of that work motivates the use of quaternions in general graphics applications for such reason as the fact that they are gimball lock free \cite{pletinckx89} and can be used to solve animation, modelling and rendering problems \cite{pletinckx89}.
+Mukundan's work is a similar paper on the desirability of quaternions, pointing to applications in computer vision \cite{mukundan02}.
+Zupan presents a recent paper that describes a method for integrating rotation values from angular velocity through the use of quaternions \cite{zupan11}.
 In that paper, it was discovered that quaternion representations offer the least amount of numerical instability for this application area.
 
 \section{Experimental Setup}
@@ -141,6 +139,8 @@ Thirty tests of approximately one minute each were run, recording the victorious
 
 We have reproduced some graphs detailing the numerical stability of the various algorithms over time for several of our experimental test runs in Figure \ref{fig:stability}.
 
+Performance graphs can be found in Figure \ref{fig:performance}.
+
 \begin{figure}[htpb]
 \includegraphics[width=8.5cm]{plots/stability_plot_21.png}
 \includegraphics[width=8.5cm]{plots/stability_plot_13.png}
@@ -151,11 +151,21 @@ Test run 28 (bottom) illustrates the poor stability of rotation matrices without
 \label{fig:stability}
 \end{figure}
 
+\begin{figure}[htpb]
+\includegraphics[width=8.5cm]{plots/timing_plot_1.png}
+\includegraphics[width=8.5cm]{plots/timing_plot_21.png}
+\includegraphics[width=8.5cm]{plots/timing_plot_22.png}
+\caption{Test run 1 (top) is a typical performance profile.
+Test run 21 (middle) is curios, the orthonormalization does not seem to cost anything for the rotation matrix.
+Test run 22 (bottom) is more anomolous, note that the orthonormalized rotation matrix is less expensive than the non-normalized version.}
+\label{fig:performance}
+\end{figure}
+
 In general, it was found that the orthonormalized rotation matrix performed the best in terms of numeric stability.
 This is discussed in subsection \ref{sec:stability}.
 
 An interesting result is that the quaternion algorithms are actually faster than the rotation matrix versions.
-This is in line with the passing comment made by Taylor \parencite[435]{taylor79}.
+This is in line with the passing comment made by Taylor \cite{taylor79}.
 This phenomenon is described in subsection \ref{sec:performance}.
 
 \subsection{Numeric Stability}
@@ -181,7 +191,7 @@ The na\"{i}ve rotation matrix quickly exploded to the $10^{10}$ level and past i
 
 One might expect that quaternions are somewhat slower than rotation matrices, since they need to be converted to a new format, and because the math describing them is somewhat complex.
 This turns out not to be the case.
-Briefly, quaternions are a much more compact representation of rotations, requiring only four components and not nine \parencite[435]{taylor79}.
+Briefly, quaternions are a much more compact representation of rotations, requiring only four components and not nine \cite{taylor79}.
 
 Consider a case where a view matrix representation has to be updated with a rotation around two axes, for example the X and Y axes.
 (We ommit the Z axis from this consideration, because it is implemented in exactly the same way as the X and Y axes, and therefore doesn't affect a comparison between methods if it is left out.)
@@ -221,13 +231,13 @@ Finally, the Gram-Schmidt ortho-normalization process is applied, but since we a
 
 For the quaternion implementation, matters are different.
 First, the quaternion rotations about the X and Y axes must be converted from an angle-axis.
-This involves 2 transcendental function invocations as well as 5 multiplications for both the X and the Y quaternion, for a total of 4 transcendental function invocations and 10 multiplications \parencite{glm:quat:angleAxis}.
+This involves 2 transcendental function invocations as well as 5 multiplications for both the X and the Y quaternion, for a total of 4 transcendental function invocations and 10 multiplications \cite{glm:quat:angleAxis}.
 Next the quaternions must be multiplied.
 
 Consider two quaternions: $q_1$ and $q_2$.
 Now, each quaternion consists of one real part (which we can treat as a scalar) and an imaginary part (which we treat as a three-component vector).
 Label these scalars and vectors as $s_1$, $s_2$, $v_1$, $v_2$, respectively.
-If we rewrite $q_1$ as $\left[ \begin{array}{cc} s_1 & v_1 \end{array} \right]$ and $q_2$ as $\left[ \begin{array}{cc} s_2 & v_2 \end{array} \right]$ then quaternion multiplication is simply defined as $q_1 q_2 = \left[ \begin{array}{cc} s_1 s_2 - v_1 \cdot v_2 & s_1 v_2 + s_2 v_1 + v_1 \times v_2 \end{array} \right]$ \parencite{schoemake85}.
+If we rewrite $q_1$ as $\left[ \begin{array}{cc} s_1 & v_1 \end{array} \right]$ and $q_2$ as $\left[ \begin{array}{cc} s_2 & v_2 \end{array} \right]$ then quaternion multiplication is simply defined as $q_1 q_2 = \left[ \begin{array}{cc} s_1 s_2 - v_1 \cdot v_2 & s_1 v_2 + s_2 v_1 + v_1 \times v_2 \end{array} \right]$ \cite{schoemake85}.
 This calculation involves 3 scalar multiplications, 1 addition, 1 subtraction, a dot product and a cross product.
 The dot product consists of 3 multiplies and 2 adds.
 The cross product comprises 6 multiplies and 3 subtractions.
@@ -276,6 +286,12 @@ We suspect that this difference will only matter in situations where numerical s
 Finally, we have discovered that the Gram-Schmidt ortho-normalization that was used in this experiment has almost no cost associated with it, and indeend, sometimes saves computational time.
 The reason for this is likely related to compiler or central processing unit optimizations, but we leave further speculation on that front to future work.
 
-\printbibliography
+\section{Additional Materials}
+
+The full source code repository, as well as all collected data, will be released should the paper be accepted.
+For now, it has been removed to protect the anonymity of the researchers.
+
+\bibliographystyle{ACM-Reference-Format-Journals}
+\bibliography{main}
 
 \end{document}
